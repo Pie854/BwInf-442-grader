@@ -29,7 +29,7 @@ jobs:
           ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
           url=$(echo "$ISSUE_BODY" \
-            | grep -oP 'https://github\.com/user-attachments/files/[^\s)]+' \
+            | grep -oP 'https://github\.com/user-attachments/files/[^\s)\]]+' \
             | head -1)
           if [ -z "$url" ]; then
             echo "found=false" >> "$GITHUB_OUTPUT"
