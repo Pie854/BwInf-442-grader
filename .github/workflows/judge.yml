@@ -64,9 +64,13 @@ jobs:
       # ── 2. ZIP herunterladen (ohne Auth-Header – user-attachments sind public) ──
       - name: Download ZIP
         if: steps.extract.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Downloading: ${{ steps.extract.outputs.url }}"
           curl -L --fail --silent --show-error \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/octet-stream" \
             "${{ steps.extract.outputs.url }}" \
             -o submission.zip
           echo "Downloaded $(wc -c < submission.zip) bytes"
