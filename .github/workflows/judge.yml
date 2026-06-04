@@ -57,29 +57,33 @@ jobs:
 
       - name: Validate and extract ZIP
         id: validate_zip
+        run: |
+          if ! unzip -t submission.zip > /dev/null 2>&1; then
+            echo "invalid=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          unzip -o submission.zip -d submission/
+        continue-on-error: true
+
+      - name: Report invalid ZIP and abort
+        if: steps.validate_zip.outcome == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
-            const { execSync } = require("child_process");
-            try {
-              execSync("unzip -t submission.zip", { stdio: "pipe" });
-              execSync("unzip -o submission.zip -d submission/", { stdio: "pipe" });
-            } catch (e) {
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: "❌ **Fehler:** Die hochgeladene Datei ist kein gültiges ZIP-Archiv."
-              });
-              await github.rest.issues.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                state: "closed",
-                labels: ["invalid"]
-              });
-              core.setFailed("Invalid ZIP file.");
-            }
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "❌ **Fehler:** Die hochgeladene Datei ist kein gültiges ZIP-Archiv. Bitte stelle sicher, dass du eine `.zip`-Datei anhängst."
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Submission von @${context.payload.issue.user.login} – verarbeitet.`,
+              state: "closed"
+            });
+            core.setFailed("Aborting: invalid ZIP.");
 
       - name: Run judge
         id: judge
