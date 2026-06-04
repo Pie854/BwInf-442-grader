@@ -24,8 +24,9 @@ jobs:
       - name: Save issue body
         run: |
           echo "${{ github.event.issue.body }}" > issue.txt
-
+      
       - name: Extract attachment URL
+        id: extract
         run: |
           python - <<EOF
           import re
@@ -40,34 +41,30 @@ jobs:
           if not m:
               raise Exception("No attachment URL found")
 
-          open("url.txt", "w").write(m.group(0))
+          url = m.group(0)
 
-          print("Found URL:")
-          print(m.group(0))
+          print("Found URL:", url)
+
+          with open("url.txt", "w") as f:
+              f.write(url)
           EOF
 
       - name: Download ZIP
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           url=$(cat url.txt)
 
-          echo "Downloading:"
-          echo $url
-
           curl -L \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H "Accept: application/octet-stream" \
             "$url" \
             -o submission.zip
 
-      - name: Debug downloaded file
+      - name: Verify ZIP
         run: |
-          echo "==== FILE TYPE ===="
           file submission.zip
-
-          echo "==== FILE SIZE ===="
-          ls -lh submission.zip
-
-          echo "==== FIRST 20 LINES ===="
-          head -20 submission.zip || true
+          unzip -t submission.zip
 
       - name: Save username
         run: |
