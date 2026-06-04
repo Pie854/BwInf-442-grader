@@ -25,13 +25,25 @@ jobs:
         run: |
           echo "${{ github.event.issue.body }}" > issue.txt
 
-      - name: Extract ZIP URL
+      - name: Extract attachment URL
         run: |
-          grep -o 'https://[^ ]*zip' issue.txt > url.txt
-
+          python - <<EOF
+          import re
+              
+          text = open("issue.txt").read()
+              
+          m = re.search(r'https://github\.com/user-attachments/files/\S+', text)
+              
+          if not m:
+              raise Exception("No attachment URL found")
+          
+          open("url.txt", "w").write(m.group(0))
+          EOF
+        
       - name: Download ZIP
         run: |
-         curl -L $(cat url.txt) -o submission.zip
+          url=$(cat url.txt)
+          curl -L -H "Accept: application/octet-stream" "$url" -o submission.zip
 
       - name: Save username
         run: |
