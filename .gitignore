@@ -1,6 +1,6 @@
 submission.zip
-test_submission/
 submission/
-issue.txt
-url.txt
-username.txt
+test_submission/
+result.json
+__pycache__/
+*.pyc
