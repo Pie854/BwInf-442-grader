@@ -31,7 +31,7 @@ jobs:
 
       - name: Download ZIP
         run: |
-          wget -O submission.zip $(cat url.txt)
+         curl -L $(cat url.txt) -o submission.zip
 
       - name: Save username
         run: |
