@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Leaderboard</title>
+</head>
+
+<body>
+
+<h1>Leaderboard</h1>
+
+<table border="1" id="board"></table>
+
+<script>
+fetch("../data/leaderboard.json")
+.then(r => r.json())
+.then(data => {
+
+    let html = `
+      <tr>
+        <th>Rank</th>
+        <th>User</th>
+        <th>Score</th>
+      </tr>
+    `;
+
+    data.forEach((x, i) => {
+        html += `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${x.user}</td>
+            <td>${x.score}</td>
+          </tr>
+        `;
+    });
+
+    document.getElementById("board").innerHTML = html;
+});
+</script>
+
+</body>
+</html>
