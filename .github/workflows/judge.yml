@@ -45,6 +45,11 @@ jobs:
           url=$(cat url.txt)
           curl -L -H "Accept: application/octet-stream" "$url" -o submission.zip
 
+      - name: Check downloaded file
+        run: |
+          file submission.zip
+          ls -lh submission.zip
+
       - name: Save username
         run: |
           echo "${{ github.event.issue.user.login }}" > username.txt
