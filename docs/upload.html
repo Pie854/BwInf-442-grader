@@ -18,7 +18,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <script>
-const supabase = window.supabase.createClient(
+const sb = window.supabase.createClient(
   "https://supabase.com/dashboard/project/edgozmdoqfpisaqlcowp",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkZ296bWRvcWZwaXNhcWxjb3dwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTI2NDcsImV4cCI6MjA5NjMyODY0N30.npwKrfYKRzQnl8-O4kh05BpPUZtwMYUUTV0DbnDMyi0"
 );
@@ -37,7 +37,7 @@ async function upload() {
     username + "_" + Date.now() + ".zip";
 
   // Datei hochladen
-  const result = await supabase.storage
+  const result = await sb.storage
     .from("submissions")
     .upload(filename, file);
 
@@ -47,7 +47,7 @@ async function upload() {
   }
 
   // In DB eintragen
-  await supabase
+  await sb
     .from("submissions")
     .insert({
       username: username,
