@@ -46,13 +46,21 @@ async function upload() {
     return;
   }
 
-  // In DB eintragen
-  await sb
+    // In DB eintragen
+  const insertResult = await sb
     .from("submissions")
     .insert({
       username: username,
-      filename: filename
+      filename: filename,
+      processed: false
     });
+
+  console.log(insertResult);
+
+  if (insertResult.error) {
+    alert(insertResult.error.message);
+    return;
+  }
 
   alert("Upload erfolgreich!");
 }
