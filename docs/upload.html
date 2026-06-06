@@ -18,7 +18,7 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
 <script>
-    console.log("SCRIPT LOADED");
+console.log("SCRIPT LOADED");
 const sb = window.supabase.createClient(
   "https://edgozmdoqfpisaqlcowp.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkZ296bWRvcWZwaXNhcWxjb3dwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTI2NDcsImV4cCI6MjA5NjMyODY0N30.npwKrfYKRzQnl8-O4kh05BpPUZtwMYUUTV0DbnDMyi0"
@@ -35,7 +35,7 @@ async function upload() {
   }
 
   const filename =
-    username + "_" + Date.now() + ".zip";
+    username + "_" + Date.now() + "_" + file.name;
 
   // Datei hochladen
   const result = await sb.storage
