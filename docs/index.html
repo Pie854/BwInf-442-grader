@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>Leaderboard</h1>
+
+<div id="scores"></div>
+
+<script>
+fetch("leaderboard.json")
+  .then(r => r.json())
+  .then(data => {
+
+    let html = "";
+
+    for (const row of data) {
+      html += `
+        <p>
+          ${row.user}: ${row.score}
+        </p>
+      `;
+    }
+
+    document.getElementById("scores").innerHTML = html;
+  });
+</script>
+
+</body>
+</html>

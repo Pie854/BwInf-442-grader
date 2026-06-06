@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload</title>
+</head>
+<body>
+
+<h1>BWINF Heuristic Contest</h1>
+
+<input type="text" id="username" placeholder="Name">
+<br><br>
+
+<input type="file" id="file">
+<br><br>
+
+<button onclick="upload()">Upload</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script>
+const supabase = window.supabase.createClient(
+  "https://supabase.com/dashboard/project/edgozmdoqfpisaqlcowp",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkZ296bWRvcWZwaXNhcWxjb3dwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTI2NDcsImV4cCI6MjA5NjMyODY0N30.npwKrfYKRzQnl8-O4kh05BpPUZtwMYUUTV0DbnDMyi0"
+);
+
+async function upload() {
+
+  const file = document.getElementById("file").files[0];
+  const username = document.getElementById("username").value;
+
+  if (!file || !username) {
+    alert("Bitte alles ausfüllen");
+    return;
+  }
+
+  const filename =
+    username + "_" + Date.now() + ".zip";
+
+  // Datei hochladen
+  const result = await supabase.storage
+    .from("submissions")
+    .upload(filename, file);
+
+  if (result.error) {
+    alert(result.error.message);
+    return;
+  }
+
+  // In DB eintragen
+  await supabase
+    .from("submissions")
+    .insert({
+      username: username,
+      filename: filename
+    });
+
+  alert("Upload erfolgreich!");
+}
+</script>
+
+</body>
+</html>

@@ -1,189 +1,31 @@
-name: Judge Submission
+name: Judge
 
 on:
-  issues:
-    types: [opened]
+  schedule:
+    - cron: "*/5 * * * *"
 
 jobs:
   judge:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
-          node-version: '24'
+          python-version: '3.12'
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - run: pip install supabase
 
-      # ── 1. URL aus dem Issue-Body extrahieren ──────────────────────────
-      - name: Extract attachment URL
-        id: extract
+      - run: python evaluator/judge.py
         env:
-          ISSUE_BODY: ${{ github.event.issue.body }}
-        run: |
-          url=$(echo "$ISSUE_BODY" \
-            | grep -oP 'https://github\.com/user-attachments/files/[^\s)\]]+' \
-            | head -1)
-          if [ -z "$url" ]; then
-            echo "found=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "found=true"  >> "$GITHUB_OUTPUT"
-            echo "url=$url"    >> "$GITHUB_OUTPUT"
-            echo "URL found: $url"
-          fi
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
-      - name: Abort – no attachment
-        if: steps.extract.outputs.found == 'false'
-        uses: actions/github-script@v7
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-        with:
-          script: |
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: "❌ **Fehler:** Kein ZIP-Anhang gefunden.\nBitte lade eine `.zip`-Datei als Anhang in den Issue-Text hoch."
-            });
-            await github.rest.issues.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `Submission von @${context.payload.issue.user.login} – verarbeitet.`,
-              state: "closed"
-            });
-            core.setFailed("No attachment found.");
+      - run: |
+          git config user.name github-actions
+          git config user.email actions@github.com
 
-      # ── 2. ZIP herunterladen (ohne Auth-Header – user-attachments sind public) ──
-      - name: Download ZIP
-        if: steps.extract.outputs.found == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Downloading: ${{ steps.extract.outputs.url }}"
-          curl -L --fail --silent --show-error \
-            -H "Authorization: token $GH_TOKEN" \
-            -H "Accept: application/octet-stream" \
-            "${{ steps.extract.outputs.url }}" \
-            -o submission.zip
-          echo "Downloaded $(wc -c < submission.zip) bytes"
-          file submission.zip
-
-      # ── 3. ZIP validieren & entpacken ─────────────────────────────────
-      - name: Validate and extract ZIP
-        id: validate_zip
-        if: steps.extract.outputs.found == 'true'
-        run: |
-          if ! unzip -t submission.zip; then
-            echo "valid=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "valid=true"  >> "$GITHUB_OUTPUT"
-            unzip -o submission.zip -d submission/
-            echo "Contents:"
-            ls submission/
-          fi
-
-      - name: Abort – invalid ZIP
-        if: steps.validate_zip.outputs.valid == 'false'
-        uses: actions/github-script@v7
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-        with:
-          script: |
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: "❌ **Fehler:** Die hochgeladene Datei ist kein gültiges ZIP-Archiv."
-            });
-            await github.rest.issues.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `Submission von @${context.payload.issue.user.login} – verarbeitet.`,
-              state: "closed"
-            });
-            core.setFailed("Invalid ZIP.");
-
-      # ── 4. Judge ausführen ────────────────────────────────────────────
-      - name: Run judge
-        id: judge
-        if: steps.validate_zip.outputs.valid == 'true'
-        env:
-          SUBMITTER: ${{ github.event.issue.user.login }}
-        run: |
-          python evaluator/judge.py \
-            --submission-dir submission/ \
-            --instances-dir  data/instances/ \
-            --leaderboard    data/leaderboard.json \
-            --submitter      "$SUBMITTER" \
-            --result-file    result.json
-          cat result.json
-
-      # ── 5. Ergebnis kommentieren ──────────────────────────────────────
-      - name: Post result comment
-        if: steps.validate_zip.outputs.valid == 'true'
-        uses: actions/github-script@v7
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-        with:
-          script: |
-            const fs = require("fs");
-            let body;
-            try {
-              const result = JSON.parse(fs.readFileSync("result.json", "utf8"));
-              if (result.status === "ok") {
-                let table = "| Testfall | Deine Kosten | Beste Kosten | Punkte |\n|---|---|---|---|\n";
-                for (const tc of result.testcases) {
-                  const icon = tc.valid ? "✅" : "❌";
-                  table += `| ${icon} ${tc.id} | ${tc.cost ?? "—"} | ${tc.best_cost ?? "—"} | ${tc.points?.toFixed(2) ?? "0.00"} |\n`;
-                }
-                body = `## ✅ Submission von @${result.submitter} ausgewertet\n\n`
-                     + `**Gesamtpunktzahl: ${result.total_score.toFixed(2)} / ${result.max_score}.00**\n\n`
-                     + table
-                     + `\n> Ungültige Testfälle (❌) geben 0 Punkte.`;
-              } else {
-                body = `## ❌ Fehler bei der Auswertung\n\n\`\`\`\n${result.error}\n\`\`\``;
-              }
-            } catch (e) {
-              body = `❌ **Interner Fehler:** Ergebnis konnte nicht gelesen werden.\n\`${e}\``;
-            }
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body
-            });
-
-      # ── 6. Leaderboard committen ──────────────────────────────────────
-      - name: Commit leaderboard
-        if: steps.judge.outcome == 'success'
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/leaderboard.json
-          git diff --cached --quiet || git commit -m "leaderboard: update for ${{ github.event.issue.user.login }} (#${{ github.event.issue.number }})"
+          git add docs/leaderboard.json
+          git commit -m "update leaderboard" || exit 0
           git push
-
-      # ── 7. Issue bereinigen & schließen ──────────────────────────────
-      - name: Redact and close issue
-        if: always()
-        uses: actions/github-script@v7
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-        with:
-          script: |
-            await github.rest.issues.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `Submission von @${context.payload.issue.user.login} – verarbeitet.`,
-              state: "closed"
-            });
