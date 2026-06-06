@@ -1,35 +1,34 @@
 from supabase import create_client
 import os
 
-# Verbindung zu Supabase
 url = os.environ["SUPABASE_URL"]
 key = os.environ["SUPABASE_KEY"]
 
 supabase = create_client(url, key)
 
-# Dummy-Evaluator
+# Dummy evaluator
 def evaluate(content):
-    return 10
 
-# Neue Submissions holen
+    return [10] * 10
+
+# Neue submissions holen
 rows = supabase.table("submissions") \
     .select("*") \
     .eq("processed", False) \
     .execute()
 
-print("Found submissions:", len(rows.data))
+print("Found:", len(rows.data))
 
-# Alle neuen Submissions bearbeiten
 for row in rows.data:
 
-    print("Processing:", row["filename"])
+    print("Processing:", row["username"])
 
     # Datei herunterladen
     data = supabase.storage \
         .from_("submissions") \
         .download(row["filename"])
 
-    # Lokal speichern
+    # Datei speichern
     with open("submission.txt", "wb") as f:
         f.write(data)
 
@@ -37,15 +36,52 @@ for row in rows.data:
     with open("submission.txt", "r") as f:
         content = f.read()
 
-    print("Content:")
     print(content)
 
     # Bewerten
-    score = evaluate(content)
+    scores = evaluate(content)
 
-    print("Score:", score)
+    print("Scores:", scores)
 
-    # Als verarbeitet markieren
+    # Alten leaderboard-Eintrag laden
+    existing = supabase.table("leaderboard") \
+        .select("*") \
+        .eq("username", row["username"]) \
+        .execute()
+
+    # Neuer User
+    if len(existing.data) == 0:
+
+        data = {
+            "username": row["username"]
+        }
+
+        for i in range(10):
+            data[f"s{i+1}"] = scores[i]
+
+        supabase.table("leaderboard") \
+            .insert(data) \
+            .execute()
+
+    # Existierender User
+    else:
+
+        old = existing.data[0]
+
+        data = {}
+
+        for i in range(10):
+
+            key = f"s{i+1}"
+
+            data[key] = max(old[key], scores[i])
+
+        supabase.table("leaderboard") \
+            .update(data) \
+            .eq("username", row["username"]) \
+            .execute()
+
+    # Submission als verarbeitet markieren
     supabase.table("submissions") \
         .update({
             "processed": True
@@ -53,4 +89,4 @@ for row in rows.data:
         .eq("id", row["id"]) \
         .execute()
 
-    print("Marked as processed")
+    print("Done")
