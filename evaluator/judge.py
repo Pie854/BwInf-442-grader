@@ -17,7 +17,7 @@ def evaluate(content: str):
         with open(f"inputs/roboter{str(i).zfill(2)}.txt", "r") as f: lines = list(map(int,f.read().split()))[::-1]
         print(lines)
         def input(): return lines.pop()
-        lines1 = content1.copy()
+        lines1 = content1.copy().reverse()
         print(lines1)
         def output(): return lines1.pop()
         s=input()
@@ -48,6 +48,9 @@ def evaluate(content: str):
             d=0
             for i in range(rl):
                 ni=idtn[ids[i]]
+                if ni>=n:
+                    p=0
+                    break
                 sn[ni]=1
                 if (d>s):
                     p=0
