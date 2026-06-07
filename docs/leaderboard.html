@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leaderboard</title>
+</head>
+<body>
+
+<h1>Leaderboard</h1>
+
+<table border="1" id="table">
+</table>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<script>
+
+const sb = window.supabase.createClient(
+  "https://edgozmdoqfpisaqlcowp.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkZ296bWRvcWZwaXNhcWxjb3dwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTI2NDcsImV4cCI6MjA5NjMyODY0N30.npwKrfYKRzQnl8-O4kh05BpPUZtwMYUUTV0DbnDMyi0"
+);
+
+async function load() {
+
+  const result = await sb
+    .from("leaderboard")
+    .select("*");
+
+  console.log(result);
+
+  const rows = result.data;
+
+  rows.sort((a,b) => {
+
+    let sa = 0;
+    let sb = 0;
+
+    for (let i=1;i<=10;i++) {
+      sa += a["s"+i];
+      sb += b["s"+i];
+    }
+
+    return sa - sb;
+  });
+
+  let html = `
+    <tr>
+      <th>User</th>
+      <th>Total</th>
+  `;
+
+  for (let i=1;i<=10;i++) {
+    html += `<th>s${i}</th>`;
+  }
+
+  html += `</tr>`;
+
+  for (const row of rows) {
+
+    let total = 0;
+
+    for (let i=1;i<=10;i++) {
+      total += row["s"+i];
+    }
+
+    html += `
+      <tr>
+        <td>${row.username}</td>
+        <td>${total}</td>
+    `;
+
+    for (let i=1;i<=10;i++) {
+      html += `<td>${row["s"+i]}</td>`;
+    }
+
+    html += `</tr>`;
+  }
+
+  document.getElementById("table").innerHTML = html;
+}
+
+load();
+
+</script>
+
+</body>
+</html>
