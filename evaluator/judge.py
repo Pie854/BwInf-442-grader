@@ -41,7 +41,7 @@ def evaluate(content: str):
         for i in range(score):
             l=int(output())
             x0,y0=map(int,output().split())
-            ids=map(int,output().split())
+            ids=list(map(int,output().split()))
             rl=len(ids)
             cx=x0
             cy=y0
