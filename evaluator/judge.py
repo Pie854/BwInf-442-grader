@@ -7,21 +7,20 @@ key = os.environ["SUPABASE_KEY"]
 
 supabase = create_client(url, key)
 
-WRONG=-1
-
 # Dummy evaluator
 def evaluate(content: str):
     scs=[]
     content1=content.splitlines()
     for i in range(1,11):
         with open(f"inputs/roboter{str(i).zfill(2)}.txt", "r") as f: lines = list(map(int,f.read().split()))[::-1]
-        print(lines)
+        #print(lines)
         def input(): return lines.pop()
         lines1 = content1.copy()[::-1]
-        print(lines1)
+        #print(lines1)
         def output(): return lines1.pop()
         s=input()
         n=input()
+        WRONG=n
         idtn=dict()
         #ntid=n*[0]
         x=[]
@@ -158,7 +157,7 @@ for row in rows.data:
 
             field = f"s{i+1}"
 
-            update_data[field] = max(old[field], scores[i])
+            update_data[field] = min(old[field], scores[i])
 
         result = supabase.table("leaderboard") \
             .update(update_data) \
