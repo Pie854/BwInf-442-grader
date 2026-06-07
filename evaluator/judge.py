@@ -18,6 +18,7 @@ def evaluate(content: str):
         print(lines)
         def input(): return lines.pop()
         lines1 = content1.copy()
+        print(lines1)
         def output(): return lines1.pop()
         s=input()
         n=input()
