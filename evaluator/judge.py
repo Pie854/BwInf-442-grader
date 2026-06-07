@@ -39,7 +39,7 @@ def evaluate(content: str):
         sn=n*[0]
         p=1
         for i in range(score):
-            l=map(int,output().split())[0]
+            l=int(output())
             x0,y0=map(int,output().split())
             ids=map(int,output().split())
             rl=len(ids)
