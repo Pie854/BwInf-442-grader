@@ -46,8 +46,8 @@ def evaluate(content: str):
             cy=y0
             d=0
             for i in range(rl):
-                ni=idtn[ids[i]]
-                if ni>=n:
+                ni=idtn.get(ids[i])
+                if ni==None:
                     p=0
                     break
                 sn[ni]=1
