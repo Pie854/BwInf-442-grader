@@ -16,7 +16,7 @@ def evaluate(content: str):
         with open(f"inputs/roboter{str(i).zfill(2)}.txt", "r") as f: lines = list(map(int,f.read().split()))[::-1]
         print(lines)
         def input(): return lines.pop()
-        lines1 = list(map(int,content.split()))[::-1]
+        lines1 = content.splitlines()
         def output(): return lines1.pop()
         s=input()
         n=input()
@@ -30,21 +30,22 @@ def evaluate(content: str):
             idtn[id]=i
             x.append(input())
             y.append(input())
-        score=output()
-        if s!=output():
+        score=int(output())
+        if s!=int(output()):
             scs.append(WRONG)
             continue
         sn=n*[0]
         p=1
         for i in range(score):
-            rl=output()
-            x0=output()
-            y0=output()
+            l=map(int,output().split())[0]
+            x0,y0=map(int,output().split())
+            ids=map(int,output().split())
+            rl=len(ids)
             cx=x0
             cy=y0
             d=0
             for i in range(rl):
-                ni=idtn[output()]
+                ni=idtn[ids[i]]
                 sn[ni]=1
                 if (d>s):
                     p=0
