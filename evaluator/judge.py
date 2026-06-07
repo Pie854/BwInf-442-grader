@@ -12,7 +12,7 @@ WRONG=-1
 # Dummy evaluator
 def evaluate(content: str):
     scs=[]
-    for i in range(1,12):
+    for i in range(1,11):
         with open(f"roboter{str(i).zfill(2)}.txt", "r") as f: lines = list(map(int,f.read().split()))[::-1][::-1]
         def input(): return lines.pop()
         lines1 = list(map(int,content.split()))[::-1]
