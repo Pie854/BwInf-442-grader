@@ -1,14 +1,78 @@
 from supabase import create_client
 import os
+from math import dist
 
 url = os.environ["SUPABASE_URL"]
 key = os.environ["SUPABASE_KEY"]
 
 supabase = create_client(url, key)
 
+WRONG=-1
+
 # Dummy evaluator
-def evaluate(content):
-    return [10] * 10
+def evaluate(content: str):
+    scs=[]
+    for i in range(1,12):
+        with open(f"roboter{str(i).zfill(2)}.txt", "r") as f: lines = list(map(int,f.read().split()))[::-1][::-1]
+        def input(): return lines.pop()
+        lines1 = list(map(int,content.split()))[::-1]
+        def output(): return lines1.pop()
+        s=input()
+        n=input()
+        idtn=dict()
+        #ntid=n*[0]
+        x=[]
+        y=[]
+        for i in range(n):
+            id=input()
+            #ntid[i]=id
+            idtn[id]=i
+            x.append(input())
+            y.append(input())
+        score=output()
+        if s!=output():
+            scs.append(WRONG)
+            continue
+        sn=n*[0]
+        p=1
+        for i in range(score):
+            rl=output()
+            x0=output()
+            y0=output()
+            cx=x0
+            cy=y0
+            d=0
+            for i in range(rl):
+                ni=idtn[output()]
+                sn[ni]=1
+                if (d>s):
+                    p=0
+                    break
+                nx=x[ni]
+                ny=y[ni]
+                d+=dist((nx,ny),(cx,cy))
+                cx,cy=nx,ny
+            if p==0:break
+            nx=x0
+            ny=y0
+            d+=dist((nx,ny),(cx,cy))
+            cx,cy=nx,ny
+            if (d>s):
+                p=0
+                break
+        for i in range(n):
+            if (sn[i]==0): p=0
+        if p==0:
+            scs.append(WRONG)
+            continue
+        scs.append(score)
+    return scs
+
+
+
+
+
+
 
 # Neue submissions holen
 rows = supabase.table("submissions") \
