@@ -17,7 +17,7 @@ def evaluate(content: str):
         with open(f"inputs/roboter{str(i).zfill(2)}.txt", "r") as f: lines = list(map(int,f.read().split()))[::-1]
         print(lines)
         def input(): return lines.pop()
-        lines1 = content1.copy().reverse()
+        lines1 = content1.copy()[::-1]
         print(lines1)
         def output(): return lines1.pop()
         s=input()
