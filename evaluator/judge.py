@@ -7,7 +7,6 @@ key = os.environ["SUPABASE_KEY"]
 
 supabase = create_client(url, key)
 
-# Dummy evaluator
 def evaluate(content: str):
     scs=[]
     content1=content.splitlines()
@@ -17,7 +16,9 @@ def evaluate(content: str):
         def input(): return lines.pop()
         lines1 = content1.copy()[::-1]
         #print(lines1)
-        def output(): return lines1.pop()
+        def output():
+            if len(lines1)==0: return 0
+            return lines1.pop()
         s=input()
         n=input()
         WRONG=n
@@ -37,7 +38,10 @@ def evaluate(content: str):
             continue
         sn=n*[0]
         p=1
-        for i in range(score):
+        if score < 0 or score > n:
+            scs.append(WRONG)
+            continue
+        for _ in range(score):
             l=int(output())
             x0,y0=map(int,output().split())
             ids=list(map(int,output().split()))
@@ -110,7 +114,11 @@ for row in rows.data:
     print(content)
 
     # Bewerten
-    scores = evaluate(content)
+    try:
+        scores = evaluate(content)
+    except Exception as e:
+        print(f"Evaluation failed for {row['username']}: {e}")
+        scores = [10**9] * 11
 
     print("Scores:", scores)
 
