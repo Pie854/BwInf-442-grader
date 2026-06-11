@@ -29,18 +29,37 @@ async function load() {
 
   const rows = result.data;
 
-  rows.sort((a,b) => {
+  const best = Array(12).fill(Infinity);
 
-    let sa = 0;
-    let sb = 0;
+  for (const row of rows) {
+    for (let i = 1; i <= 11; i++) {
+      const s = row["s"+i];
+  
+      if (s > 0)
+        best[i] = Math.min(best[i], s);
+    }
+  }
 
-    for (let i=1;i<=10;i++) {
-      sa += a["s"+i];
-      sb += b["s"+i];
+  function totalScore(row) {
+
+      let total = 0;
+
+      for (let i = 1; i <= 11; i++) {
+      
+        const mine = row["s"+i];
+      
+        if (mine > 0 && best[i] < Infinity) {
+          total += 100 * best[i] / mine;
+        }
+      
+      }
+    
+      return total;
     }
 
-    return sa - sb;
-  });
+  rows.sort((a,b) =>
+    totalScore(b) - totalScore(a)
+  );
 
   let html = `
     <tr>
@@ -48,7 +67,7 @@ async function load() {
       <th>Total</th>
   `;
 
-  for (let i=1;i<=10;i++) {
+  for (let i=1;i<=11;i++) {
     html += `<th>s${i}</th>`;
   }
 
@@ -56,11 +75,7 @@ async function load() {
 
   for (const row of rows) {
 
-    let total = 0;
-
-    for (let i=1;i<=10;i++) {
-      total += row["s"+i];
-    }
+    let total = totalScore(row).toFixed(2);
 
     html += `
       <tr>
@@ -68,7 +83,7 @@ async function load() {
         <td>${total}</td>
     `;
 
-    for (let i=1;i<=10;i++) {
+    for (let i=1;i<=11;i++) {
       html += `<td>${row["s"+i]}</td>`;
     }
 

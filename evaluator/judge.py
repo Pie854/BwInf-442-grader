@@ -11,7 +11,7 @@ supabase = create_client(url, key)
 def evaluate(content: str):
     scs=[]
     content1=content.splitlines()
-    for i in range(1,11):
+    for i in range(1,12):
         with open(f"inputs/roboter{str(i).zfill(2)}.txt", "r") as f: lines = list(map(int,f.read().split()))[::-1]
         #print(lines)
         def input(): return lines.pop()
@@ -134,7 +134,7 @@ for row in rows.data:
             "username": row["username"]
         }
 
-        for i in range(10):
+        for i in range(11):
             leaderboard_data[f"s{i+1}"] = scores[i]
 
         result = supabase.table("leaderboard") \
@@ -153,7 +153,7 @@ for row in rows.data:
 
         update_data = {}
 
-        for i in range(10):
+        for i in range(11):
 
             field = f"s{i+1}"
 
